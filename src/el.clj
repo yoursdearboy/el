@@ -51,11 +51,11 @@
 
 (defn tr [rows]
   (fn [match]
-    ((clone-for [row rows] [:td any-node] (td row)) match)))
+    ((clone-for [row rows] [any-node] (td row)) (:content match))))
 
 (defn table [params]
   (fn [match]
-    (at match [:tbody :tr] (-> match :attrs :el:table keyword params tr))))
+    (at match [:tbody] (-> match :attrs :el:table keyword params tr))))
 
 (defn if* [params]
   (fn [match]
@@ -66,6 +66,7 @@
   (fn [match]
     (case (:tag match)
       :input ((set-attr :value value) match)
+      :textarea ((html/content value) match)
       :select (at match
                   [(attr= :value value)]
                   (set-attr :selected true)))))
@@ -103,7 +104,7 @@
      [(attr? :el:if)] (if* params)
      [(attr? :el:table)] (table params)
      [(attr? :el:form)] (form params)
-     [any-node] (replace-vars-safe params)))))
+     [any-node] (replace-vars-safe (format-data params))))))
 
 (defn template [& args]
   (html/emit* (apply snippet args)))
