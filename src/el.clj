@@ -65,17 +65,19 @@
 (defn input [value]
   (fn [match]
     (case (:tag match)
-      :input ((set-attr :value value) match)
-      :textarea ((html/content value) match)
+      :input (case (-> match :attrs :type keyword)
+               :checkbox (if value ((set-attr :checked value) match) match)
+               ((set-attr :value (format-value value)) match))
+      :textarea ((html/content (format-value value)) match)
       :select (at match
-                  [(attr= :value value)]
+                  [(attr= :value (format-value value))]
                   (set-attr :selected true)))))
 
 (defn form [params]
   (fn [match]
     (at* match
          (for [[id value] (seq params)]
-           [[(attr= :id (name id))] (input (format-value value))]))))
+           [[(attr= :id (name id))] (input value)]))))
 
 (defn layout [params]
   (fn [match]
