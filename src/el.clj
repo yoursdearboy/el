@@ -88,10 +88,18 @@
                   [[(attr= :id (name id))] (html/substitute node)])]
       (at* (html/html-resource source) forms))))
 
+(defn str->selector [x]
+  (into [] (map keyword) (clojure.string/split x #" ")))
+
 (defn substitute [params]
   (fn [match]
-    (let [source (-> match :attrs :el:substitute)]
-      (html/html-resource source))))
+    (let [source (-> match :attrs :el:substitute)
+          path-selector (str/split source #" " 2)
+          path (first path-selector)
+          has-selector (> (count path-selector) 1)
+          selector (if has-selector (str->selector (second path-selector)) [:body :> :*])]
+      (-> (html/html-resource path)
+          (html/select selector)))))
 
 (defn snippet
   ([source] (snippet source {}))
