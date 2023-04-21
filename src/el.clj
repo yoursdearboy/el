@@ -116,5 +116,8 @@
      [(attr? :el:form)] (form params)
      [any-node] (replace-vars-safe (format-data params))))))
 
-(defn template [& args]
+(defn template* [& args]
   (html/emit* (apply snippet args)))
+
+(defn template [& args]
+  (apply str (apply template* args)))
