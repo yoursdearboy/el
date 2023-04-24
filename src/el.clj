@@ -6,9 +6,10 @@
 (defn symbolize-keys [x]
   (into {} (for [[k v] x] [(symbol k) v])))
 
-(def format-date-format "yyyy-MM-dd")
+(def ^:dynamic *date-format* "yyyy-MM-dd")
 
-(defn format-date [x] (.format (java.text.SimpleDateFormat. format-date-format) x))
+(defn format-date [x]
+  (.format (java.text.SimpleDateFormat. *date-format*) x))
 
 (defn format-value [x]
   (cond
