@@ -6,6 +6,12 @@
 (defn symbolize-keys [x]
   (into {} (for [[k v] x] [(symbol k) v])))
 
+(defn keyword-starts-with? [k substr]
+  (str/starts-with? (str k) (str substr)))
+
+(defn keyword-replace [k match replacement]
+  (keyword (str/replace (str k) match replacement)))
+
 (def ^:dynamic *date-format* "yyyy-MM-dd")
 
 (defn format-date [x]
@@ -41,11 +47,13 @@
          :else node)))))
 
 (defn eval* [params code]
-  (eval
-   (list
-    'let
-    (into [] cat (-> params symbolize-keys seq))
-    (read-string code))))
+  (try (eval
+        (list
+         'let
+         (into [] cat (-> params symbolize-keys seq))
+         (read-string code)))
+       (catch clojure.lang.Compiler$CompilerException e
+         (throw (ex-cause e)))))
 
 (defn td [row]
   (replace-vars-safe (format-data row)))
@@ -102,6 +110,30 @@
       (-> (html/html-resource path)
           (html/select selector)))))
 
+(defn attr-keyword-starts? [attribute-keyword]
+  (html/pred
+   (fn [{:keys [attrs]}]
+     (and (some? attrs)
+          (some #(keyword-starts-with? % attribute-keyword) (keys attrs))))))
+
+(defn evaluate-attr? [k _]
+  (and (keyword-starts-with? k :el)
+       (not= k :el:layout)
+       (not= k :el:substitute)
+       (not= k :el:if)
+       (not= k :el:table)
+       (not= k :el:form)))
+
+(defn evaluate-attrs [params]
+  (map (fn [[k v]]
+         (if (evaluate-attr? k v)
+           [(keyword-replace k ":el:" "") (eval* params v)]
+           [k v]))))
+
+(defn evaluate [params]
+  (fn [match]
+    (update match :attrs (fn [attrs] (into {} (evaluate-attrs params) attrs)))))
+
 (defn snippet
   ([source] (snippet source {}))
   ([source params] (snippet source [root] params))
@@ -115,6 +147,7 @@
      [(attr? :el:if)] (if* params)
      [(attr? :el:table)] (table params)
      [(attr? :el:form)] (form params)
+     [(attr-keyword-starts? :el)] (evaluate params)
      [any-node] (replace-vars-safe (format-data params))))))
 
 (defn template* [& args]
