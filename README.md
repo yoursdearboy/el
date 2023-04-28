@@ -19,3 +19,10 @@ Enlive templates Thymeleaf way.
     </table>
 </div>
 ```
+
+# Formatting
+
+Date format set using `:el/date-format` context key, by default it is `yyyy-MM-dd`.
+
+For more flexible formatting use function `(format date format-string)`.
+It's a good idea to pass the format string using a context key.

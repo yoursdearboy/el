@@ -12,10 +12,11 @@
 (defn keyword-replace [k match replacement]
   (keyword (str/replace (str k) match replacement)))
 
-(def ^:dynamic *date-format* "yyyy-MM-dd")
+(def ^:dynamic *options*
+  {::date-format "yyyy-MM-dd"})
 
 (defn format-date [x]
-  (.format (java.text.SimpleDateFormat. *date-format*) x))
+  (.format (java.text.SimpleDateFormat. (::date-format *options*)) x))
 
 (defn format-value [x]
   (cond
@@ -138,17 +139,19 @@
   ([source] (snippet source {}))
   ([source params] (snippet source [root] params))
   ([source selector params]
-   ((html/snippet
-     source
-     selector
-     []
-     [(attr? :el:layout)] (layout params)
-     [(attr? :el:substitute)] (substitute params)
-     [(attr? :el:if)] (if* params)
-     [(attr? :el:table)] (table params)
-     [(attr? :el:form)] (form params)
-     [(attr-keyword-starts? :el)] (evaluate params)
-     [any-node] (replace-vars-safe (format-data params))))))
+   (binding
+    [*options* (merge *options* params)]
+     ((html/snippet
+       source
+       selector
+       []
+       [(attr? :el:layout)] (layout params)
+       [(attr? :el:substitute)] (substitute params)
+       [(attr? :el:if)] (if* params)
+       [(attr? :el:table)] (table params)
+       [(attr? :el:form)] (form params)
+       [(attr-keyword-starts? :el)] (evaluate params)
+       [any-node] (replace-vars-safe (format-data params)))))))
 
 (defn template* [& args]
   (html/emit* (apply snippet args)))
