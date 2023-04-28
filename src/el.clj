@@ -1,16 +1,8 @@
 (ns el
   (:require [clojure.string :as str]
             [net.cgrand.xml :as xml]
-            [net.cgrand.enlive-html :as html :refer [any-node at at* attr? attr= clone-for root set-attr]]))
-
-(defn symbolize-keys [x]
-  (into {} (for [[k v] x] [(symbol k) v])))
-
-(defn keyword-starts-with? [k substr]
-  (str/starts-with? (str k) (str substr)))
-
-(defn keyword-replace [k match replacement]
-  (keyword (str/replace (str k) match replacement)))
+            [net.cgrand.enlive-html :as html :refer [any-node at at* attr? attr= clone-for root set-attr]]
+            [el.utils :refer [keyword-replace keyword-starts-with? symbolize-keys]]))
 
 (def ^:dynamic *options*
   {::date-format "yyyy-MM-dd"})
@@ -48,13 +40,12 @@
          :else node)))))
 
 (defn eval* [params code]
-  (try (eval
-        (list
-         'let
-         (into [] cat (-> params symbolize-keys seq))
-         (read-string code)))
-       (catch clojure.lang.Compiler$CompilerException e
-         (throw (ex-cause e)))))
+  (let [bindings (into [] cat (symbolize-keys params))
+        body (read-string code)]
+    (println (pr-str bindings))
+    (try (eval `(let ~bindings ~body))
+         (catch clojure.lang.Compiler$CompilerException e
+           (throw (ex-cause e))))))
 
 (defn td [row]
   (replace-vars-safe (format-data row)))
