@@ -42,7 +42,6 @@
 (defn eval* [params code]
   (let [bindings (into [] cat (symbolize-keys params))
         body (read-string code)]
-    (println (pr-str bindings))
     (try (eval `(let ~bindings ~body))
          (catch clojure.lang.Compiler$CompilerException e
            (throw (ex-cause e))))))
