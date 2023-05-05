@@ -2,7 +2,7 @@
   (:require [clojure.string :as str]
             [net.cgrand.xml :as xml]
             [net.cgrand.enlive-html :as html :refer [any-node at at* attr? attr= clone-for root set-attr]]
-            [el.utils :refer [keyword-replace keyword-starts-with? symbolize-keys]]))
+            [el.utils :refer [keyword-replace keyword-starts-with?]]))
 
 (def ^:dynamic *options*
   {::date-format "yyyy-MM-dd"})
@@ -39,12 +39,15 @@
                                            [k (substitute-vars v)])))
          :else node)))))
 
+(defn eval- [params body]
+  (let [keys (into [] (map (comp symbol name)) (keys params))
+        f (eval `(fn [{:keys ~keys}] ~body))]
+    (f params)))
+
 (defn eval* [params code]
-  (let [bindings (into [] cat (symbolize-keys params))
-        body (read-string code)]
-    (try (eval `(let ~bindings ~body))
-         (catch clojure.lang.Compiler$CompilerException e
-           (throw (ex-cause e))))))
+  (try (eval- params (read-string code))
+       (catch clojure.lang.Compiler$CompilerException e
+         (throw (ex-cause e)))))
 
 (defn td [row]
   (replace-vars-safe (format-data row)))
