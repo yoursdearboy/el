@@ -104,6 +104,12 @@
       (-> (html/html-resource path)
           (html/select selector)))))
 
+(defn content [params]
+  (fn [match]
+    (assoc match :content
+           (html/flatten-nodes-coll
+            (eval* params (-> match :attrs :el:content))))))
+
 (defn attr-keyword-starts? [attribute-keyword]
   (html/pred
    (fn [{:keys [attrs]}]
@@ -143,6 +149,7 @@
        [(attr? :el:if)] (if* params)
        [(attr? :el:table)] (table params)
        [(attr? :el:form)] (form params)
+       [(attr? :el:content)] (content params)
        [(attr-keyword-starts? :el)] (evaluate params)
        [any-node] (replace-vars-safe (format-data params)))))))
 
