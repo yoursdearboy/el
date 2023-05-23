@@ -2,12 +2,11 @@
   (:require [el]))
 
 (defn context-middleware
-  [ctx]
-  (fn [handler]
-    (fn [request]
-      (-> request
-          (assoc :el/context (merge {:request request} (if (fn? ctx) (ctx request) ctx)))
-          (handler)))))
+  [handler ctx]
+  (fn [request]
+    (-> request
+        (assoc :el/context (merge {:request request} (if (fn? ctx) (ctx request) ctx)))
+        (handler)))))
 
 (defn template-middleware
   [handler]
