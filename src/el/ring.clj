@@ -6,7 +6,7 @@
   (fn [request]
     (-> request
         (assoc :el/context (merge {:request request} (if (fn? ctx) (ctx request) ctx)))
-        (handler)))))
+        (handler))))
 
 (defn template-middleware
   [handler]
