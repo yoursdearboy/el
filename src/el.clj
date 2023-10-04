@@ -110,6 +110,12 @@
            (html/flatten-nodes-coll
             (eval* params (-> match :attrs :el:content))))))
 
+(defn html [params]
+  (fn [match]
+    (assoc match :content
+           (html/html
+            (eval* params (-> match :attrs :el:html))))))
+
 (defn attr-keyword-starts? [attribute-keyword]
   (html/pred
    (fn [{:keys [attrs]}]
@@ -122,7 +128,9 @@
        (not= k :el:substitute)
        (not= k :el:if)
        (not= k :el:table)
-       (not= k :el:form)))
+       (not= k :el:form)
+       (not= k :el:content)
+       (not= k :el:html)))
 
 (defn evaluate-attrs [params]
   (map (fn [[k v]]
@@ -150,6 +158,7 @@
        [(attr? :el:table)] (table params)
        [(attr? :el:form)] (form params)
        [(attr? :el:content)] (content params)
+       [(attr? :el:html)] (html params)
        [(attr-keyword-starts? :el)] (evaluate params)
        [any-node] (replace-vars-safe (format-data params)))))))
 
